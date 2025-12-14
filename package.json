@@ -1,5 +1,6 @@
 {
-  "dependencies": {
-    "cors": "^2.8.5"
-  }
+  "name": "truestate",
+  "version": "1.0.0",
+  "description": "Retail Sales Management System",
+  "private": true
 }
