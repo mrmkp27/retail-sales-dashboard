@@ -11,9 +11,34 @@ connectDB();
 
 // --- MIDDLEWARE ---
 // 2. Use CORS middleware (Accept requests from the frontend domain)
-const allowedOrigins = ['http://localhost:5173']; // Default Vite port
+const allowedOrigins = [
+    'http://localhost:5173', // Default Vite dev port
+    'http://localhost:3000', // Alternative dev port
+    process.env.FRONTEND_URL, // Production frontend URL from environment
+].filter(Boolean); // Remove any undefined values
+
 app.use(cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests) in development
+        if (!origin && process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+        
+        // In production, require origin
+        if (!origin && process.env.NODE_ENV === 'production') {
+            return callback(new Error('CORS: Origin required in production'));
+        }
+        
+        // Check if origin is in allowed list
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else if (process.env.NODE_ENV !== 'production') {
+            // In development, allow all origins
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
 }));
@@ -32,6 +57,7 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Backend server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
